@@ -17,6 +17,7 @@ public class PortScanner{
     private String targetHost;
     private int startPort;
     private int endPort;
+    private boolean grabBanners;
 
     //Results and timing
     private List<ScanResult> results;
@@ -32,9 +33,23 @@ public class PortScanner{
      */
 
     public PortScanner(String targetHost, int startPort, int endPort){
+        this(targetHost, startPort, endPort, false);
+    }
+
+    /**
+     * Constructor with banner grabbing option
+     * 
+     * @param targetHost The target hostname or IP address
+     * @param startPort First port in range to scan 
+     * @param endPort Last port in range to scan
+     * @param grabBanners Whether to attempt banner grabbing
+     */
+
+    public PortScanner(String targetHost, int startPort, int endPort, boolean grabBanners){
         this.targetHost = targetHost;
         this.startPort = startPort;
         this.endPort = endPort;
+        this.grabBanners = grabBanners;
         this.results = new ArrayList<>();
     }
 
@@ -61,7 +76,7 @@ public class PortScanner{
         //Scan each port in the range
         for(int port = startPort; port <= endPort; port++){
             //Check the port 
-            ScanResult result = PortChecker.checkPort(targetHost, port);
+            ScanResult result = PortChecker.checkPort(targetHost, port, grabBanners);
 
             //Store and display if open
             if(result.isOpen()){

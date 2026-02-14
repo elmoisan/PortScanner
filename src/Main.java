@@ -25,27 +25,38 @@ public class Main {
         //Parse options
         boolean useMultithreading = false;
         int threadCount = 100;
+        boolean grabBanners = false;
         int argOffset = 0;
 
-        //Check for -t or --threads flag
-        if(args.length > 0 && (args[0].equals("-t") || args[0].equals("--threads"))) {
-            useMultithreading = true;
-            argOffset = 1;
-
-            //Check if thread count is specified
-            if(args.length > 1 && args[1].matches("\\d+")) {
-                threadCount = Integer.parseInt(args[1]);
-                argOffset = 2;
-
-                if(threadCount < 1 || threadCount > 1000) {
-                    System.err.println("Error: Thread count must be between 1 and 1000");
-                    System.exit(1);
+        // Process all flags
+        while (argOffset < args.length) {
+            String arg = args[argOffset];
+            
+            if (arg.equals("-t") || arg.equals("--threads")) {
+                useMultithreading = true;
+                argOffset++;
+                
+                // Check if next arg is a thread count
+                if (argOffset < args.length && args[argOffset].matches("\\d+")) {
+                    threadCount = Integer.parseInt(args[argOffset]);
+                    argOffset++;
+                    
+                    if (threadCount < 1 || threadCount > 1000) {
+                        System.err.println("Error: Thread count must be between 1 and 1000");
+                        System.exit(1);
+                    }
                 }
+            } else if (arg.equals("-b") || arg.equals("--banner")) {
+                grabBanners = true;
+                argOffset++;
+            } else {
+                // Not a flag, must be the host
+                break;
             }
         }
 
         //Validate remaining arguments
-        if(args.length - argOffset < 1) {
+        if(argOffset >= args.length) {
             printUsage();
             System.exit(1);
         }
@@ -54,11 +65,12 @@ public class Main {
         String host = args[argOffset];
         int startPort = 1;
         int endPort = 1024; //Default: scan well-known ports
+        argOffset++;
 
         //Parse port range if provided
-        if(args.length - argOffset >= 2) {
+        if(argOffset < args.length) {
             try {
-                String[] range = args[argOffset + 1].split("-");
+                String[] range = args[argOffset].split("-");
                 startPort = Integer.parseInt(range[0]);
                 endPort = Integer.parseInt(range[1]);
 
@@ -81,11 +93,11 @@ public class Main {
         //Launch appropriate scanner 
         if(useMultithreading) {
             //Version 2.0 - Multi-threaded
-            PortScannerMultithreaded scanner = new PortScannerMultithreaded(host, startPort, endPort, threadCount);
+            PortScannerMultithreaded scanner = new PortScannerMultithreaded(host, startPort, endPort, threadCount, grabBanners);
             scanner.scan();
         } else {
             //Version 1.0 - Sequential
-            PortScanner scanner = new PortScanner(host, startPort, endPort);
+            PortScanner scanner = new PortScanner(host, startPort, endPort, grabBanners);
             scanner.scan();
         }
     }
@@ -112,6 +124,7 @@ public class Main {
      * Display usage information
      */
     private static void printUsage() {
+        System.out.println("  -b, --banner        Enable banner grabbing for version detection");
         System.out.println("Usage: java Main [options] <host> [port-range]");
         System.out.println();
         System.out.println("Options:");
@@ -123,6 +136,7 @@ public class Main {
         System.out.println("  [port-range]        Port range in format: start-end (optional, default: 1-1024)");
         System.out.println();
         System.out.println("Examples:");
+        System.out.println("  java Main -t -b localhost 1-100      # Multi-threaded with banners");
         System.out.println("  java Main localhost                      # Sequential scan, ports 1-1024");
         System.out.println("  java Main -t localhost 1-100             # Multi-threaded, 100 threads");
         System.out.println("  java Main --threads 50 192.168.1.1 1-100 # Multi-threaded, 50 threads");

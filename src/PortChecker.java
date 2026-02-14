@@ -98,4 +98,34 @@ public class PortChecker {
 
         return true;
     }
+
+    /**
+ * Complete port check with optional banner grabbing
+ * 
+ * @param host Target hostname or IP address
+ * @param port Port number to check
+ * @param grabBanner Whether to attempt banner grabbing
+ * @return ScanResult object with detailed information
+ */
+    public static ScanResult checkPort(String host, int port, boolean grabBanner) {
+        long startTime = System.currentTimeMillis();
+    
+        try {
+            Socket socket = new Socket();
+            socket.connect(new InetSocketAddress(host, port), TIMEOUT);
+        
+            long responseTime = System.currentTimeMillis() - startTime;
+            socket.close();
+        
+            return new ScanResult(port, true, responseTime, grabBanner);
+        
+        } catch (SocketTimeoutException e) {
+            long responseTime = System.currentTimeMillis() - startTime;
+            return new ScanResult(port, false, responseTime, false);
+        
+        } catch (IOException e) {
+            long responseTime = System.currentTimeMillis() - startTime;
+            return new ScanResult(port, false, responseTime, false);
+        }
+    }
 }

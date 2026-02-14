@@ -19,6 +19,8 @@ public class ScanResult{
     private final long responseTime;
     private final String service;
     private final String timestamp;
+    private final String banner;
+
 
     /**
      * Constructor - Creates a new scan result 
@@ -28,21 +30,35 @@ public class ScanResult{
      * @param responseTime Response time in milliseconds
      */
 
-    public ScanResult(int port, boolean isOpen, long responseTime){
-        this.port = port;
-        this.isOpen = isOpen;
-        this.responseTime = responseTime;
+    public ScanResult(int port, boolean isOpen, long responseTime) {
+    this(port, isOpen, responseTime, false);
+}
 
-        //Identify the service if port is open
-        if (isOpen){
-            this.service =ServiceIdentifier.identifyService(port);
+public ScanResult(int port, boolean isOpen, long responseTime, boolean grabBanner) {
+    this.port = port;
+    this.isOpen = isOpen;
+    this.responseTime = responseTime;
+    
+    // Identify the service if port is open
+    if (isOpen) {
+        this.service = ServiceIdentifier.identifyService(port);
+        
+        // Grab banner if requested
+        if (grabBanner) {
+            String rawBanner = BannerGrabber.grabBanner("localhost", port);
+            this.banner = BannerGrabber.extractVersion(rawBanner);
         } else {
-            this.service = "N/A";
+            this.banner = "";
         }
-
-        //Record timestamp
-        this.timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    } else {
+        this.service = "N/A";
+        this.banner = "";
     }
+    
+    // Record timestamp
+    this.timestamp = LocalDateTime.now()
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+}
 
     //Getters
 
@@ -101,6 +117,14 @@ public class ScanResult{
     }
 
     /**
+    * Gets the service banner (version info)
+    * @return Banner string, or empty if not grabbed
+    */
+    public String getBanner() {
+        return banner;
+    }
+
+    /**
      * Formats the result as a readable string
      * Only returns a formatted string if the port is open
      * 
@@ -108,16 +132,20 @@ public class ScanResult{
      */
 
     @Override
-    public String toString(){
-        if(!isOpen){
-            return null; //Don't display closed ports
+    public String toString() {
+        if (!isOpen) {
+            return null;
         }
-
-        return String.format("%-8d %-10s %-20s (%dms)",
+    
+        String bannerInfo = (banner != null && !banner.isEmpty()) ? 
+            " [" + banner + "]" : "";
+    
+        return String.format("%-8d %-10s %-20s (%dms)%s",
             port,
             "OPEN",
             service,
-            responseTime
+            responseTime,
+            bannerInfo
         );
     }
 

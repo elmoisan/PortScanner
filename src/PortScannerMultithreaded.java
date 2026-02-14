@@ -21,6 +21,7 @@ public class PortScannerMultithreaded {
     private int startPort;
     private int endPort;
     private int threadPoolSize;
+    private boolean grabBanners;
 
     //Results and timing 
     private List<ScanResult> results;
@@ -44,17 +45,7 @@ public class PortScannerMultithreaded {
      */
 
     public PortScannerMultithreaded(String targetHost, int startPort, int endPort){
-        this.targetHost = targetHost;
-        this.startPort = startPort;
-        this.endPort = endPort;
-        this.threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
-
-        //Thread-safe list for concurrent access
-        this.results = new CopyOnWriteArrayList<>();
-
-        //Thread-safe counters
-        this.scannedPorts = new AtomicInteger(0);
-        this.totalPorts = new AtomicInteger(endPort - startPort + 1);
+        this(targetHost, startPort, endPort, DEFAULT_THREAD_POOL_SIZE, false);
     }
 
     /**
@@ -67,10 +58,25 @@ public class PortScannerMultithreaded {
      */
 
     public PortScannerMultithreaded(String targetHost, int startPort, int endPort, int threadPoolSize){
+        this(targetHost, startPort, endPort, threadPoolSize, false);
+    }
+
+    /**
+     * Constructor with custom thread pool size and banner grabbing
+     * 
+     * @param targetHost The target hostname or IP address
+     * @param startPort First port in range to scan
+     * @param endPort Last port in range to scan
+     * @param threadPoolSize Number of concurrent threads to use
+     * @param grabBanners Whether to attempt banner grabbing
+     */
+
+    public PortScannerMultithreaded(String targetHost, int startPort, int endPort, int threadPoolSize, boolean grabBanners){
         this.targetHost = targetHost;
         this.startPort = startPort;
         this.endPort = endPort;
         this.threadPoolSize = threadPoolSize;
+        this.grabBanners = grabBanners;
 
         //Thread-safe list for concurrent access
         this.results = new CopyOnWriteArrayList<>();
@@ -145,7 +151,7 @@ public class PortScannerMultithreaded {
 
     private void scanPort(int port){
         //Check the port
-        ScanResult result = PortChecker.checkPort(targetHost, port);
+        ScanResult result = PortChecker.checkPort(targetHost, port, grabBanners);
 
         //If open, store and display
         if (result.isOpen()) {
@@ -196,13 +202,14 @@ public class PortScannerMultithreaded {
 
             for(int i = 0; i < barLength; i++){
                 if(i < filled){
-                    bar.append("█");
+                    bar.append(GREEN).append("█").append(RESET);
                 } else {
                     bar.append("░");
                 }
             }
-            bar.append("]").append(percentage).append("% (")
-                .append(current).append("/").append(total).append(")");
+            bar.append("]")
+                .append(BLUE).append(percentage).append("%").append(RESET)
+                .append(" (").append(current).append("/").append(total).append(")");
             
             System.out.print(bar.toString());
             System.out.flush();

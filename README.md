@@ -2,9 +2,10 @@
 
 [![Java](https://img.shields.io/badge/Java-8+-orange.svg)](https://www.java.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
+[![Version](https://img.shields.io/badge/Version-2.0-brightgreen.svg)]()
+[![Performance](https://img.shields.io/badge/Speed-100x_faster-red.svg)]()
 
-A lightweight TCP port scanner written in Java for educational purposes. This project demonstrates network programming concepts, socket operations, and cybersecurity reconnaissance techniques.
+A high-performance TCP port scanner written in Java for educational purposes. Features both sequential and multi-threaded scanning with up to 100x performance improvement. This project demonstrates network programming concepts, socket operations, and cybersecurity reconnaissance techniques.
 
 ![Port Scanner Demo](examples/scan_localhost_success.png)
 
@@ -42,24 +43,44 @@ The scanner uses the **TCP Connect** scanning technique, establishing full three
 
 ## ✨ Features
 
-### Current (v1.0)
+### Version 2.0 (Current)
 
-- ✅ **TCP Connect Scan**: Full connection establishment to detect open ports
-- ✅ **Service Identification**: Automatically identifies 50+ common services (HTTP, SSH, MySQL, etc.)
-- ✅ **Configurable Port Ranges**: Scan specific ranges (e.g., 1-1024, 80-443)
-- ✅ **Real-time Progress**: Live updates during scanning with progress indicators
-- ✅ **Response Time Measurement**: Records connection time for each port
-- ✅ **Detailed Statistics**: Comprehensive scan summary with timing and results
-- ✅ **Input Validation**: Robust argument parsing with helpful error messages
-- ✅ **Timeout Management**: 2-second timeout per port to prevent hanging
+- ✅ **Multi-threaded Scanning**: Concurrent port testing with configurable thread pools (10-100x faster)
+- ✅ **Performance Optimization**: Scans 1000 ports in ~15 seconds vs 4+ minutes (sequential)
+- ✅ **Thread-safe Operations**: Uses CopyOnWriteArrayList and AtomicInteger for safe concurrent access
+- ✅ **Animated Progress Bar**: Real-time visual progress indicator with percentage
+- ✅ **Configurable Threads**: Custom thread count (1-1000) via `-t` or `--threads` flag
+- ✅ **Performance Metrics**: Displays ports/second scan rate
 
-### Planned (v2.0+)
+### Version 1.0 (Legacy - Sequential)
 
-- 🔜 **Multi-threaded Scanning**: Parallel port testing for 10-100x speed improvement
+### Planned (v2.1+)
+
+- 🔜 **Banner Grabbing**: Service version detection and fingerprinting
 - 🔜 **Banner Grabbing**: Service version detection
 - 🔜 **Export Formats**: HTML, CSV, and JSON report generation
 - 🔜 **Scan Profiles**: Predefined port sets (web servers, databases, etc.)
 - 🔜 **GUI Interface**: JavaFX-based graphical interface
+
+---
+
+## Performance Comparison
+
+### Sequential vs Multi-threaded
+
+| Port Range | Sequential (v1.0) | Multi-threaded (v2.0) | Speedup |
+|------------|-------------------|-----------------------|---------|
+| 1-100      | ~3-4 minutes      | ~3-5 seconds          |40-80x   |
+| 1-500      | ~15-20 minutes    | ~8-12 seconds         |75-100x  |
+| 1-1000     | ~30-40 minutes    | ~15-20 seconds        |100-120x |
+
+### Comparison Screenshots
+
+**Sequential Scan (v1.0) - Slow:**
+![V1 Sequential](examples/v1_sequential_scan.png)
+
+**Multi-threaded Scan (v2.0) - Fast:**
+![V2 Multi-threaded](examples/v2_multithreaded_scan.png)
 
 ---
 
@@ -104,7 +125,7 @@ The project follows clean architecture principles with clear separation of conce
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
@@ -137,9 +158,22 @@ The project follows clean architecture principles with clear separation of conce
 ## 📖 Usage
 
 ### Basic Syntax
+
+**Sequential Mode (v1.0):**
 ```bash
 java Main <host> [port-range]
 ```
+
+**Multi-threaded Mode (v2.0) - Recommended:**
+```bash
+java Main -t [thread-count] <host> [port-range]
+```
+```
+
+### Options
+
+- `-t, --threads [N]`: **Optional** - Enable multi-threaded mode (default: 100 threads)
+  - Specify `N` to use custom thread count (1-1000)
 
 ### Arguments
 
@@ -167,8 +201,20 @@ java Main example.com 80-443
 ```bash
 java Main scanme.nmap.org 22-22
 ```
+**Multi-threaded scan (recommended for speed):**
+```bash
+java Main -t localhost 1-1000
+```
 
----
+**Custom thread count (50 threads):**
+```bash
+java Main --threads 50 192.168.1.1 1-500
+```
+
+**Fast scan of common ports:**
+```bash
+java Main -t scanme.nmap.org 1-1024
+```
 
 ## Examples
 
@@ -237,7 +283,62 @@ PORT    STATE    SERVICE              TIME
 
 ---
 
-### Example 3: No Open Ports Found
+---
+
+### Example 3: Multi-threaded Performance
+```bash
+java Main -t localhost 1-1000
+```
+
+**Output:**
+```
+╔════════════════════════════════════╗
+║     Simple Port Scanner v2.0      ║
+╚════════════════════════════════════╝
+
+⚖️  Legal Warning:
+Only scan systems you own or have permission to test.
+Unauthorized scanning may be illegal.
+
+🎯 Target: localhost
+📊 Port range: 1-1000
+⏱️  Timeout: 2000ms
+🧵 Threads: 100
+
+🔍 Starting multi-threaded scan...
+⚡ Using 100 concurrent threads
+
+PORT    STATE    SERVICE              TIME
+────────────────────────────────────────────────
+8080     OPEN     HTTP-Proxy           (5ms)
+Progress: [████████████████████████████████████████] 100% (1000/1000)
+
+════════════════════════════════════════
+           SCAN SUMMARY
+════════════════════════════════════════
+✅ Scan completed in 15.23 seconds
+📊 Total ports scanned: 1000
+🔓 Open ports found: 1
+⚡ Speed: 65.66 ports/second
+════════════════════════════════════════
+```
+
+![Multi-threaded Performance](examples/v2_performance_stats.png)
+
+---
+
+### Example 4: Custom Thread Count
+```bash
+java Main --threads 50 localhost 1-500
+```
+
+Shows how to customize the number of concurrent threads for different scenarios.
+
+![Custom Threads](examples/v2_custom_threads.png)
+
+---
+
+### Example 4: No Open Ports Found
 ```bash
 java Main localhost 9000-9010
 ```
@@ -296,7 +397,7 @@ Examples:
 
 ---
 
-## 🔬 Technical Details
+## Technical Details
 
 ### Scanning Technique
 
@@ -330,15 +431,75 @@ Scanner                    Target
 
 ### Performance
 
-**Single-threaded (v1.0):**
-- ~2 seconds per port (with 2s timeout)
-- 100 ports ≈ 3-5 minutes
-- 1000 ports ≈ 30-35 minutes
+**Multi-threaded (v2.0) - Recommended:**
+- Uses thread pool with configurable size (default: 100 threads)
+- Thread-safe data structures: `CopyOnWriteArrayList`, `AtomicInteger`
+- ~0.015-0.02 seconds per port (average with 100 threads)
+- 100 ports: ~3-5 seconds
+- 1000 ports: ~15-20 seconds
+- **40-100x faster than sequential mode**
 
-**Planned multi-threaded (v2.0):**
-- ~0.02 seconds per port (100 threads)
-- 100 ports ≈ 5-10 seconds
-- 1000 ports ≈ 30-60 seconds
+**Sequential (v1.0) - Legacy:**
+- Single-threaded, one port at a time
+- ~2 seconds per port (with 2s timeout)
+- 100 ports: ~3-4 minutes
+- 1000 ports: ~30-40 minutes
+- Only recommended for small ranges (<50 ports)
+
+**Optimal Thread Count:**
+- Small scans (<100 ports): 10-50 threads
+- Medium scans (100-1000 ports): 50-100 threads
+- Large scans (1000+ ports): 100-200 threads
+- Beyond 200: diminishing returns due to overhead
+
+---
+
+## 🧵 Multi-threading Architecture
+
+### How It Works
+```
+Main Thread
+    │
+    ├─→ Creates ExecutorService with N threads (e.g., 100)
+    │
+    ├─→ Submits 1000 port scan tasks to queue
+    │
+    └─→ Thread Pool (100 workers)
+         │
+         ├─→ Thread 1: scans port 1
+         ├─→ Thread 2: scans port 2
+         ├─→ Thread 3: scans port 3
+         │     ...
+         ├─→ Thread 100: scans port 100
+         │
+         └─→ As threads finish, they take next task from queue
+              (ports 101, 102, 103...)
+```
+
+### Thread-Safe Components
+
+| Component | Purpose | Thread-Safety Mechanism |
+|-----------|---------|------------------------|
+| **CopyOnWriteArrayList** | Stores open port results | Copy-on-write for safe concurrent writes |
+| **AtomicInteger** | Tracks scan progress | Atomic increment operations |
+| **synchronized** | Console output | Lock-based synchronization |
+| **ExecutorService** | Thread pool management | Built-in thread coordination |
+
+### Code Example
+```java
+// Create thread pool
+ExecutorService executor = Executors.newFixedThreadPool(100);
+
+// Submit tasks
+for (int port = 1; port <= 1000; port++) {
+    final int p = port;
+    executor.submit(() -> scanPort(p));  // Runs concurrently
+}
+
+// Wait for completion
+executor.shutdown();
+executor.awaitTermination(10, TimeUnit.MINUTES);
+```
 
 ---
 
@@ -422,12 +583,17 @@ Through building this project, I gained practical experience with:
 - [x] Progress indicators
 - [x] Error handling
 
-### Version 2.0 (Planned)
-- [ ] Multi-threaded scanning (100 concurrent threads)
-- [ ] Banner grabbing for version detection
-- [ ] HTML report generation
-- [ ] Scan profiles (quick, full, web, database)
-- [ ] Rate limiting to avoid overwhelming targets
+### Version 2.0 (Current) ✅
+- [x] Multi-threaded scanning with configurable thread pool
+- [x] Thread-safe concurrent operations
+- [x] Animated progress bar with percentage
+- [x] Performance metrics (ports/second)
+- [x] 40-100x performance improvement
+
+### Version 2.1 (Next)
+- [ ] Banner grabbing for service version detection
+- [ ] Timeout customization via CLI
+- [ ] Scan result export (CSV, JSON)
 
 ### Version 3.0 (Future)
 - [ ] JavaFX GUI interface
