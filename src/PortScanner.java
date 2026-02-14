@@ -61,7 +61,7 @@ public class PortScanner{
         //Scan each port in the range
         for(int port = startPort; port <= endPort; port++){
             //Check the port 
-            ScanResult result = PortChecker.chechPort(targetHost, port);
+            ScanResult result = PortChecker.checkPort(targetHost, port);
 
             //Store and display if open
             if(result.isOpen()){

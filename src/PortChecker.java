@@ -49,7 +49,7 @@ public class PortChecker {
      * 
      */
 
-    public static ScanResult chechPort(String host, int port){
+    public static ScanResult checkPort(String host, int port){
         long startTime = System.currentTimeMillis();
 
         try{

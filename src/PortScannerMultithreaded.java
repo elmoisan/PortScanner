@@ -34,6 +34,7 @@ public class PortScannerMultithreaded {
     //Default thread pool size
     private static final int DEFAULT_THREAD_POOL_SIZE = 100;
 
+
     /**
      * Constructor with default thread pool size (100 threads)
      * 
@@ -182,6 +183,11 @@ public class PortScannerMultithreaded {
         //Update every 10 ports or at completion
         if (current % 10 == 0 || current == total){
             int percentage = (current * 100) / total;
+
+            //ANSI color codes
+            String GREEN = "\u001B[32m";
+            String BLUE = "\u001B[34m";
+            String RESET = "\u001B[0m";
 
             //Create progress bar 
             int barLength = 40;
