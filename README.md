@@ -2,7 +2,7 @@
 
 [![Java](https://img.shields.io/badge/Java-8+-orange.svg)](https://www.java.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-2.0-brightgreen.svg)]()
+[![Version](https://img.shields.io/badge/Version-2.2-brightgreen.svg)]()
 [![Performance](https://img.shields.io/badge/Speed-100x_faster-red.svg)]()
 
 A high-performance TCP port scanner written in Java for educational purposes. Features both sequential and multi-threaded scanning with up to 100x performance improvement. This project demonstrates network programming concepts, socket operations, and cybersecurity reconnaissance techniques.
@@ -43,23 +43,35 @@ The scanner uses the **TCP Connect** scanning technique, establishing full three
 
 ## ✨ Features
 
-### Version 2.0 (Current)
+### Version 2.2 (Current)
 
 - ✅ **Multi-threaded Scanning**: Concurrent port testing with configurable thread pools (10-100x faster)
 - ✅ **Performance Optimization**: Scans 1000 ports in ~15 seconds vs 4+ minutes (sequential)
 - ✅ **Thread-safe Operations**: Uses CopyOnWriteArrayList and AtomicInteger for safe concurrent access
-- ✅ **Animated Progress Bar**: Real-time visual progress indicator with percentage
+- ✅ **Animated Progress Bar**: Real-time visual progress indicator with ANSI color codes
 - ✅ **Configurable Threads**: Custom thread count (1-1000) via `-t` or `--threads` flag
+- ✅ **Configurable Timeout**: Custom connection timeout (100-30000ms) via `-o` or `--timeout` flag
 - ✅ **Performance Metrics**: Displays ports/second scan rate
+- ✅ **Banner Grabbing**: Service version detection and fingerprinting with `-b` or `--banner` flag
+- ✅ **Service Identification**: Automatic service name mapping for common ports
+- ✅ **Export to CSV**: Results export with metadata via `-e csv` flag
+- ✅ **Export to JSON**: Structured results export via `-e json` flag
+- ✅ **Batch Export**: Export to both CSV and JSON simultaneously with `-e all`
+
+### Version 2.1 (Previous)
+- ✅ Banner grabbing and version detection
+- ✅ Multi-threaded performance
+
+### Version 2.0 (Previous)
+- ✅ Multi-threaded scanning with configurable thread pools
+- ✅ 40-100x performance improvement
 
 ### Version 1.0 (Legacy - Sequential)
 
-### Planned (v2.1+)
+### Planned (v3.0+)
 
-- 🔜 **Banner Grabbing**: Service version detection and fingerprinting
-- 🔜 **Banner Grabbing**: Service version detection
-- 🔜 **Export Formats**: HTML, CSV, and JSON report generation
 - 🔜 **Scan Profiles**: Predefined port sets (web servers, databases, etc.)
+- 🔜 **XML Export**: Additional export format
 - 🔜 **GUI Interface**: JavaFX-based graphical interface
 
 ---
@@ -174,6 +186,10 @@ java Main -t [thread-count] <host> [port-range]
 
 - `-t, --threads [N]`: **Optional** - Enable multi-threaded mode (default: 100 threads)
   - Specify `N` to use custom thread count (1-1000)
+- `-b, --banner`: **Optional** - Enable banner grabbing for service version detection
+- `-o, --timeout [MS]`: **Optional** - Set connection timeout in milliseconds (100-30000ms, default: 2000ms)
+- `-e, --export [FORMAT] [FILENAME]`: **Optional** - Export results to file
+  - Formats: `csv` (comma-separated values), `json` (JSON format), `all` (both CSV and JSON)
 
 ### Arguments
 
@@ -214,6 +230,46 @@ java Main --threads 50 192.168.1.1 1-500
 **Fast scan of common ports:**
 ```bash
 java Main -t scanme.nmap.org 1-1024
+```
+
+**Scan with banner grabbing (version detection):**
+```bash
+java Main -b localhost 80-443
+```
+
+**Multi-threaded scan with banners:**
+```bash
+java Main -t -b localhost 1-1024
+```
+
+**Custom threads with banner grabbing:**
+```bash
+java Main --threads 50 -b 192.168.1.1 1-500
+```
+
+**Scan with custom timeout (5 seconds):**
+```bash
+java Main -o 5000 localhost 1-1024
+```
+
+**Export results to CSV:**
+```bash
+java Main -t -e csv scan_results localhost 1-1024
+```
+
+**Export results to JSON:**
+```bash
+java Main -t -e json scan_results localhost 1-1024
+```
+
+**Export to both CSV and JSON:**
+```bash
+java Main -t -e all scan_results localhost 1-1024
+```
+
+**Combine all options - fast scan with timeout and JSON export:**
+```bash
+java Main -t -o 3000 -b -e json network_scan 192.168.1.1 1-1000
 ```
 
 ## Examples
@@ -285,7 +341,43 @@ PORT    STATE    SERVICE              TIME
 
 ---
 
-### Example 3: Multi-threaded Performance
+### Example 3: Banner Grabbing for Version Detection
+```bash
+java Main -b localhost 9000-9001
+```
+
+**Output:**
+```
+╔════════════════════════════════════╗
+║     Simple Port Scanner v2.0      ║
+╚════════════════════════════════════╝
+
+⚖️  Legal Warning:
+Only scan systems you own or have permission to test.
+Unauthorized scanning may be illegal.
+
+Target: localhost
+Port range: 9000-9001
+Timeout: 2000ms
+
+Starting scan...
+
+PORT    STATE    SERVICE              TIME
+────────────────────────────────────────────────
+9000     OPEN     HTTP-Alt             (15ms) [Apache/2.4.58 (Ubuntu)]
+Progress: [████████████████████████████████████████]100% (2/2)
+
+════════════════════════════════════════
+           SCAN SUMMARY
+════════════════════════════════════════
+Scan completed in 0.04 seconds
+Total ports scanned: 2
+Open ports found: 1
+⚡ Speed: 46.51 ports/second
+════════════════════════════════════════
+```
+
+### Example 4: Multi-threaded Performance
 ```bash
 java Main -t localhost 1-1000
 ```
@@ -327,7 +419,7 @@ Progress: [███████████████████████
 
 ---
 
-### Example 4: Custom Thread Count
+### Example 5: Custom Thread Count
 ```bash
 java Main --threads 50 localhost 1-500
 ```
@@ -338,7 +430,7 @@ Shows how to customize the number of concurrent threads for different scenarios.
 
 ---
 
-### Example 4: No Open Ports Found
+### Example 6: No Open Ports Found
 ```bash
 java Main localhost 9000-9010
 ```
@@ -362,7 +454,7 @@ Open ports found: 0
 
 ---
 
-### Example 4: Error Handling
+### Example 7: Error Handling
 
 **Invalid port range:**
 ```bash
@@ -503,6 +595,150 @@ executor.awaitTermination(10, TimeUnit.MINUTES);
 
 ---
 
+## 🎯 Banner Grabbing
+
+### What is Banner Grabbing?
+
+Banner grabbing is the process of connecting to a network service and capturing its response header, which often contains version information. This helps identify the specific software and version running on an open port.
+
+### How It Works
+
+1. **Connect** to the open port
+2. **Send Probe** based on the service (HTTP HEAD request, EHLO for SMTP, etc.)
+3. **Capture Response** containing service banner
+4. **Extract Version** information from the banner
+5. **Display** version info alongside port results
+
+### Usage
+
+Enable with the `-b` or `--banner` flag:
+
+```bash
+# Sequential scan with banners
+java Main -b localhost 80-443
+
+# Multi-threaded scan with banners
+java Main -t -b localhost 1-1024
+
+# Combine with custom thread count
+java Main --threads 50 -b 192.168.1.1 1-500
+```
+
+### Example Output
+
+```
+PORT    STATE    SERVICE              TIME
+────────────────────────────────────────────────
+80       OPEN     HTTP                 (14ms) [Apache/2.4.58 (Ubuntu)]
+443      OPEN     HTTPS                (15ms) [OpenSSL/3.0.2]
+22       OPEN     SSH                  (245ms) [OpenSSH_9.0]
+```
+
+### Implementation Details
+
+- **BannerGrabber.java**: Handles banner retrieval and parsing
+- **Service-specific probes**: Different protocols get appropriate requests
+- **Timeout handling**: Waits up to 3 seconds for banner response
+- **Version extraction**: Parses common version patterns from responses
+
+### Supported Services
+
+- HTTP/HTTPS (port 80, 443, 8080, 8888)
+- FTP (port 21)
+- SMTP (port 25, 587)
+- POP3 (port 110)
+- SSH (port 22)
+- And many others with generic fallback
+
+---
+
+## 📊 Export Results
+
+### Overview
+
+Scan results can be exported in CSV or JSON format for further analysis, reporting, or integration with other tools.
+
+### Export Formats
+
+#### CSV Format
+```bash
+java Main -t -e csv results localhost 1-1024
+```
+
+**Output file (results.csv):**
+```
+Target,Port,State,Service,Time(ms),Banner
+localhost,80,OPEN,HTTP,14,"Apache/2.4.58 (Ubuntu)"
+localhost,443,OPEN,HTTPS,15,"OpenSSL/3.0.2"
+localhost,8080,OPEN,HTTP-Proxy,20,""
+
+# Scan Summary
+# Total ports scanned: 1024
+# Open ports found: 3
+# Scan completed at: 2026-02-15 15:30:45
+# Scan duration: 18.45 seconds
+```
+
+#### JSON Format
+```bash
+java Main -t -e json results localhost 1-1024
+```
+
+**Output file (results.json):**
+```json
+{
+  "scan_info": {
+    "target": "localhost",
+    "total_ports_scanned": 1024,
+    "open_ports_found": 3,
+    "scan_duration_seconds": 18.45,
+    "timestamp": "2026-02-15 15:30:45"
+  },
+  "results": [
+    {
+      "port": 80,
+      "state": "OPEN",
+      "service": "HTTP",
+      "response_time_ms": 14,
+      "banner": "Apache/2.4.58 (Ubuntu)"
+    },
+    {
+      "port": 443,
+      "state": "OPEN",
+      "service": "HTTPS",
+      "response_time_ms": 15,
+      "banner": "OpenSSL/3.0.2"
+    }
+  ]
+}
+```
+
+### Export Both Formats
+```bash
+java Main -t -e all results localhost 1-1024
+```
+
+Creates both `results.csv` and `results.json`.
+
+### Usage Examples
+
+**Export with banner grabbing:**
+```bash
+java Main -t -b -e json detailed_scan localhost 22-443
+```
+
+**Export with custom timeout:**
+```bash
+java Main -t -o 5000 -e csv slow_network_scan 192.168.1.0 1-1024
+```
+
+**Export all with multiple options:**
+```bash
+java Main -t --threads 50 -o 3000 -b -e all network_audit 10.0.0.1 1-10000
+```
+
+---
+
 ## Legal Disclaimer
 
 ### IMPORTANT - READ BEFORE USE
@@ -590,15 +826,24 @@ Through building this project, I gained practical experience with:
 - [x] Performance metrics (ports/second)
 - [x] 40-100x performance improvement
 
-### Version 2.1 (Next)
-- [ ] Banner grabbing for service version detection
-- [ ] Timeout customization via CLI
-- [ ] Scan result export (CSV, JSON)
+### Version 2.1 (Previous) ✅
+- [x] Banner grabbing for service version detection
+- [x] Service-specific probes (HTTP, FTP, SMTP, SSH, POP3)
+- [x] Version extraction and fingerprinting
+
+### Version 2.2 (Current) ✅
+- [x] Timeout customization via CLI (`-o`, `--timeout`)
+- [x] Scan result export to CSV format
+- [x] Scan result export to JSON format
+- [x] Batch export to both formats (`-e all`)
+
+### Version 2.3 (Next)
+- [ ] Scan profiles (common port sets: web, database, all services)
+- [ ] XML export format
 
 ### Version 3.0 (Future)
 - [ ] JavaFX GUI interface
 - [ ] Scan history and comparison
-- [ ] Export to CSV, JSON, XML
 - [ ] Advanced service detection
 - [ ] Vulnerability suggestions based on open ports
 

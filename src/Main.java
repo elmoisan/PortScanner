@@ -5,7 +5,7 @@
  * Supports both sequential (v1) and multi-threaded (v2) scanning.
  * 
  * @author Elodie Moisan
- * @version 2.0
+ * @version 2.2
  */
 
 public class Main {
@@ -26,6 +26,9 @@ public class Main {
         boolean useMultithreading = false;
         int threadCount = 100;
         boolean grabBanners = false;
+        int timeout = 2000; // Default: 2 seconds
+        String exportFormat = null;
+        String exportFilename = null;
         int argOffset = 0;
 
         // Process all flags
@@ -48,6 +51,40 @@ public class Main {
                 }
             } else if (arg.equals("-b") || arg.equals("--banner")) {
                 grabBanners = true;
+                argOffset++;
+            } else if (arg.equals("-o") || arg.equals("--timeout")) {
+                argOffset++;
+                if (argOffset >= args.length) {
+                    System.err.println("Error: --timeout requires a value in milliseconds");
+                    System.exit(1);
+                }
+                try {
+                    timeout = Integer.parseInt(args[argOffset]);
+                    if (timeout < 100 || timeout > 30000) {
+                        System.err.println("Error: Timeout must be between 100 and 30000 milliseconds");
+                        System.exit(1);
+                    }
+                    argOffset++;
+                } catch (NumberFormatException e) {
+                    System.err.println("Error: Timeout must be a number");
+                    System.exit(1);
+                }
+            } else if (arg.equals("-e") || arg.equals("--export")) {
+                argOffset++;
+                if (argOffset >= args.length) {
+                    System.err.println("Error: --export requires format and filename");
+                    System.err.println("Usage: --export <format> <filename>");
+                    System.err.println("Formats: csv, json, all");
+                    System.exit(1);
+                }
+                exportFormat = args[argOffset];
+                argOffset++;
+                
+                if (argOffset >= args.length) {
+                    System.err.println("Error: --export requires a filename");
+                    System.exit(1);
+                }
+                exportFilename = args[argOffset];
                 argOffset++;
             } else {
                 // Not a flag, must be the host
@@ -90,15 +127,29 @@ public class Main {
                 System.exit(1);
             }
         }
+
+        // Set timeout in PortChecker
+        PortChecker.setTimeout(timeout);
+
         //Launch appropriate scanner 
         if(useMultithreading) {
-            //Version 2.0 - Multi-threaded
+            //Version 2.1+ - Multi-threaded
             PortScannerMultithreaded scanner = new PortScannerMultithreaded(host, startPort, endPort, threadCount, grabBanners);
             scanner.scan();
+            
+            // Export if requested
+            if (exportFormat != null) {
+                ExportHelper.export(scanner.getResults(), host, exportFilename, exportFormat, scanner.getScanTime());
+            }
         } else {
-            //Version 1.0 - Sequential
+            //Version 2.1+ - Sequential
             PortScanner scanner = new PortScanner(host, startPort, endPort, grabBanners);
             scanner.scan();
+            
+            // Export if requested
+            if (exportFormat != null) {
+                ExportHelper.export(scanner.getResults(), host, exportFilename, exportFormat, scanner.getScanTime());
+            }
         }
     }
 
@@ -107,7 +158,7 @@ public class Main {
      */
     private static void printBanner(){
         System.out.println("╔════════════════════════════════════╗");
-        System.out.println("║     Simple Port Scanner v2.0       ║");
+        System.out.println("║     Simple Port Scanner v2.2       ║");
         System.out.println("╚════════════════════════════════════╝");
         System.out.println();        
     }
@@ -124,23 +175,27 @@ public class Main {
      * Display usage information
      */
     private static void printUsage() {
-        System.out.println("  -b, --banner        Enable banner grabbing for version detection");
         System.out.println("Usage: java Main [options] <host> [port-range]");
         System.out.println();
         System.out.println("Options:");
         System.out.println("  -t, --threads [N]   Enable multi-threaded scanning (default: 100 threads)");
-        System.out.println("                      Specify N to use custom thread count (1-1000)");
+        System.out.println("                      Specify N for custom thread count (1-1000)");
+        System.out.println("  -b, --banner        Enable banner grabbing for version detection");
+        System.out.println("  -o, --timeout [MS]  Set connection timeout in milliseconds (100-30000, default: 2000)");
+        System.out.println("  -e, --export [F][N] Export results to file (format: csv|json|all, filename: output)");
         System.out.println();
         System.out.println("Arguments:");
         System.out.println("  <host>              Target hostname or IP address");
         System.out.println("  [port-range]        Port range in format: start-end (optional, default: 1-1024)");
         System.out.println();
         System.out.println("Examples:");
-        System.out.println("  java Main -t -b localhost 1-100      # Multi-threaded with banners");
-        System.out.println("  java Main localhost                      # Sequential scan, ports 1-1024");
-        System.out.println("  java Main -t localhost 1-100             # Multi-threaded, 100 threads");
-        System.out.println("  java Main --threads 50 192.168.1.1 1-100 # Multi-threaded, 50 threads");
-        System.out.println("  java Main scanme.nmap.org 20-80          # Sequential scan");
+        System.out.println("  java Main localhost                              # Sequential scan, ports 1-1024");
+        System.out.println("  java Main -t localhost 1-100                     # Multi-threaded, 100 threads");
+        System.out.println("  java Main -t -b localhost 80-443                 # With banner grabbing");
+        System.out.println("  java Main -o 5000 localhost 1-1000               # Custom 5s timeout");
+        System.out.println("  java Main -t -e csv results localhost 1-1000     # Export to CSV");
+        System.out.println("  java Main -t -e all results localhost 1-1000     # Export CSV and JSON");
+        System.out.println("  java Main scanme.nmap.org 20-80                  # Remote server scan");
         System.out.println();
         System.out.println("Performance:");
         System.out.println("  Sequential:     ~2 seconds per port");

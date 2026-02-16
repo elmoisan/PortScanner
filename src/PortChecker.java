@@ -18,7 +18,25 @@ import java.io.IOException;
 public class PortChecker {
 
     //Timeout for connection attempts (milliseconds)
-    private static final int TIMEOUT = 2000; //2 seconds
+    private static final int DEFAULT_TIMEOUT = 2000; //2 seconds
+    private static int timeout = DEFAULT_TIMEOUT;
+
+    /**
+     * Sets the timeout for connection attempts
+     * 
+     * @param timeoutMs Timeout in milliseconds (min: 100ms, max: 30000ms)
+     */
+    public static void setTimeout(int timeoutMs) {
+        if (timeoutMs < 100) {
+            System.err.println("Warning: Timeout too low (minimum 100ms), using 100ms");
+            timeout = 100;
+        } else if (timeoutMs > 30000) {
+            System.err.println("Warning: Timeout too high (maximum 30000ms), using 30000ms");
+            timeout = 30000;
+        } else {
+            timeout = timeoutMs;
+        }
+    }
 
     /**
      * Simple check if a port is open (returns boolean only)
@@ -31,7 +49,7 @@ public class PortChecker {
     public static boolean isPortOpen(String host, int port){
         try{
             Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(host, port), TIMEOUT);
+            socket.connect(new InetSocketAddress(host, port), timeout);
             socket.close();
             return true;
 
@@ -57,7 +75,7 @@ public class PortChecker {
             Socket socket = new Socket();
 
             //Attempt connection
-            socket.connect(new InetSocketAddress(host, port), TIMEOUT);
+            socket.connect(new InetSocketAddress(host, port), timeout);
             long responseTime = System.currentTimeMillis() - startTime;
             socket.close();
             return new ScanResult(port, true, responseTime);
@@ -76,7 +94,7 @@ public class PortChecker {
      */
 
     public static int getTimeout(){
-        return TIMEOUT;
+        return timeout;
     }
 
     /**
@@ -112,7 +130,7 @@ public class PortChecker {
     
         try {
             Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(host, port), TIMEOUT);
+            socket.connect(new InetSocketAddress(host, port), timeout);
         
             long responseTime = System.currentTimeMillis() - startTime;
             socket.close();

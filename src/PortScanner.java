@@ -176,13 +176,25 @@ public class PortScanner{
     }
 
     /**
-     * Gets the total scan duration in milliseconds
+     * Gets the total scan duration in seconds
      * 
-     * @return Scan duration, or 0 if scan hasn't completed
+     * @return Scan duration in seconds, or 0 if scan hasn't completed
+     */
+    public double getScanTime(){
+        if (scanEndTime > 0 && scanStartTime > 0){
+            return (scanEndTime - scanStartTime) / 1000.0;
+        }
+        return 0.0;
+    }
+
+    /**
+     * Gets the total scan duration in milliseconds (deprecated, use getScanTime)
+     * 
+     * @return Scan duration in milliseconds, or 0 if scan hasn't completed
      */
     public long getScanDuration(){
         if (scanEndTime > 0 && scanStartTime > 0){
-            return scanEndTime - scanEndTime;
+            return scanEndTime - scanStartTime;
         }
         return 0;
     }

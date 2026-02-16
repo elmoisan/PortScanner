@@ -264,4 +264,16 @@ public class PortScannerMultithreaded {
         }
         return 0;
     }
+
+    /**
+     * Gets the scan duration in seconds
+     * 
+     * @return Scan duration in seconds, or 0.0 if scan hasn't completed
+     */
+    public double getScanTime(){
+        if(scanEndTime > 0 && scanStartTime > 0){
+            return (scanEndTime - scanStartTime) / 1000.0;
+        }
+        return 0.0;
+    }
 }
